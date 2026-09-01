@@ -78,24 +78,41 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Diet Soda | Pure Zero Refreshment" },
-      { name: "description", content: "Experience the crisp, clean taste of Diet Soda. Zero sugar, zero compromise." },
+      {
+        name: "description",
+        content: "Experience the crisp, clean taste of Diet Soda. Zero sugar, zero compromise.",
+      },
       { name: "author", content: "Lovable" },
       { property: "og:title", content: "Diet Soda | Pure Zero Refreshment" },
-      { property: "og:description", content: "Experience the crisp, clean taste of Diet Soda. Zero sugar, zero compromise." },
+      {
+        property: "og:description",
+        content: "Experience the crisp, clean taste of Diet Soda. Zero sugar, zero compromise.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "Diet Soda | Pure Zero Refreshment" },
-      { name: "twitter:description", content: "Experience the crisp, clean taste of Diet Soda. Zero sugar, zero compromise." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/fb99d3b7-934a-47d0-9e34-1b5d23b94eaf/id-preview-762126c6--9cb2408a-7d2c-44d8-8e44-8ace47caf020.lovable.app-1785681210759.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/fb99d3b7-934a-47d0-9e34-1b5d23b94eaf/id-preview-762126c6--9cb2408a-7d2c-44d8-8e44-8ace47caf020.lovable.app-1785681210759.png" },
+      {
+        name: "twitter:description",
+        content: "Experience the crisp, clean taste of Diet Soda. Zero sugar, zero compromise.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/fb99d3b7-934a-47d0-9e34-1b5d23b94eaf/id-preview-762126c6--9cb2408a-7d2c-44d8-8e44-8ace47caf020.lovable.app-1785681210759.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/fb99d3b7-934a-47d0-9e34-1b5d23b94eaf/id-preview-762126c6--9cb2408a-7d2c-44d8-8e44-8ace47caf020.lovable.app-1785681210759.png",
+      },
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
       },
-      ],
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,

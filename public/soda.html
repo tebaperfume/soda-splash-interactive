@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#044e3b">
 <title>Diet Soda | Pure Zero Refreshment</title>
 <meta name="description" content="Experience the crisp, clean taste of Diet Soda. Zero sugar, zero compromise.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -342,8 +343,11 @@ body.blue-theme {
 .field label { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-color); }
 .field input, .field textarea {
     background: rgba(255,255,255,0.06); border: 1px solid var(--glass-border); border-radius: 14px;
-    padding: 0.8rem 1rem; color: #fff; font-family: var(--font-main); font-size: 0.9rem; outline: none;
+    padding: 0.8rem 1rem; color: #fff; font-family: var(--font-main); font-size: 16px; outline: none;
     transition: border-color 0.3s, background 0.3s;
+}
+@supports (-webkit-touch-callout: none) {
+    .field input, .field textarea { font-size: 16px; }
 }
 .field input:focus, .field textarea:focus { border-color: #fbcfe8; background: rgba(255,255,255,0.1); }
 .field textarea { resize: vertical; min-height: 90px; }
@@ -484,14 +488,14 @@ body.blue-theme {
             <div class="product-carousel">
                 <div class="carousel-cards">
                     <div class="card active" data-flavor="classic">
-                        <img src="https://api.getlayers.ai/storage/v1/object/public/public/assets/soda-14ff8a788d/Green%20Soda.png" alt="Diet Classic can">
+                        <img src="https://api.getlayers.ai/storage/v1/object/public/public/assets/soda-14ff8a788d/Green%20Soda.png" alt="Diet Classic can" decoding="async">
                         <div class="card-info">
                             <span>Diet Classic</span>
                             <span>$2.99</span>
                         </div>
                     </div>
                     <div class="card" data-flavor="blue">
-                        <img src="https://api.getlayers.ai/storage/v1/object/public/public/assets/soda-14ff8a788d/Blue%20Soda.png" alt="Zero Lime can" style="filter: brightness(0.7);">
+                        <img src="https://api.getlayers.ai/storage/v1/object/public/public/assets/soda-14ff8a788d/Blue%20Soda.png" alt="Zero Lime can" style="filter: brightness(0.7);" decoding="async">
                         <div class="card-info">
                             <span>Zero Lime</span>
                             <span>$2.99</span>
@@ -554,6 +558,12 @@ let greenTexture = null;
 
 // Preload textures & Warm up shaders
 modelViewer.addEventListener('load', async () => {
+    // Let the main can load first; keep heavy decorative models deferred
+    document.querySelectorAll('model-viewer').forEach(mv => {
+        if (mv !== modelViewer) {
+            mv.setAttribute('loading', 'lazy');
+        }
+    });
     try {
         blueTexture = await modelViewer.createTexture('https://api.getlayers.ai/storage/v1/object/public/public/assets/soda-14ff8a788d/blue%20base%20color.jpg');
         greenTexture = await modelViewer.createTexture('https://api.getlayers.ai/storage/v1/object/public/public/assets/soda-14ff8a788d/green%20base%20color.jpg');
@@ -740,6 +750,15 @@ window.addEventListener('touchstart', (e) => {
 }, { passive: true });
 // Gentle auto-motion on touch devices with no pointer
 const isTouch = window.matchMedia('(hover: none)').matches;
+let modelInteracting = false;
+let modelInteractTimer = null;
+function pauseAutoOrbit() {
+    modelInteracting = true;
+    clearTimeout(modelInteractTimer);
+    modelInteractTimer = setTimeout(() => { modelInteracting = false; }, 4000);
+}
+modelViewer.addEventListener('pointerdown', pauseAutoOrbit);
+modelViewer.addEventListener('touchstart', pauseAutoOrbit, { passive: true });
 if (isTouch) {
     setInterval(() => {
         const t = Date.now() * 0.0004;
@@ -751,13 +770,17 @@ if (isTouch) {
 }
 // Swipe to change flavor
 let touchStartX = null;
-window.addEventListener('touchstart', (e) => { touchStartX = e.touches[0] ? e.touches[0].clientX : null; }, { passive: true });
+let touchOnModel = false;
+window.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0] ? e.touches[0].clientX : null;
+    touchOnModel = e.touches[0] ? modelViewer.contains(e.touches[0].target) : false;
+}, { passive: true });
 window.addEventListener('touchend', (e) => {
     if (touchStartX === null) return;
     const endX = e.changedTouches[0] ? e.changedTouches[0].clientX : touchStartX;
     const dx = endX - touchStartX;
     touchStartX = null;
-    if (Math.abs(dx) < 70 || document.getElementById('overlay').classList.contains('open')) return;
+    if (Math.abs(dx) < 70 || touchOnModel || document.getElementById('overlay').classList.contains('open')) return;
     const i = flavorOrder.indexOf(currentFlavor);
     selectFlavor(flavorOrder[(i + (dx < 0 ? 1 : -1) + flavorOrder.length) % flavorOrder.length]);
 }, { passive: true });
@@ -767,7 +790,9 @@ function animate() {
     currentMouse.x += (mouse.x - currentMouse.x) * 0.05;
     currentMouse.y += (mouse.y - currentMouse.y) * 0.05;
 
-    modelViewer.cameraOrbit = `${(currentMouse.x * 40) + switchSpin}deg ${90 + (currentMouse.y * 20)}deg 380%`;
+    if (!modelInteracting) {
+        modelViewer.cameraOrbit = `${(currentMouse.x * 40) + switchSpin}deg ${90 + (currentMouse.y * 20)}deg 380%`;
+    }
 
     berriesFG.style.transform = `translate(${currentMouse.x * 60}px, ${currentMouse.y * 60}px)`;
     berriesBG.style.transform = `translate(${currentMouse.x * -30}px, ${currentMouse.y * -30}px)`;
@@ -849,7 +874,7 @@ function createBubble() {
     bubblesContainer.appendChild(bubble);
     setTimeout(() => bubble.remove(), duration * 1000);
 }
-setInterval(createBubble, 400);
+setInterval(createBubble, isTouch || window.innerWidth <= 640 ? 750 : 400);
 
 /* =============== Interactivity: nav panels, cart, contact =============== */
 const FLAVORS = {
