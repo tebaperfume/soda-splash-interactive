@@ -362,6 +362,41 @@ body.blue-theme {
 }
 .panel-btn:hover { transform: translateY(-2px); filter: brightness(1.08); }
 
+.pay-secure { display: flex; align-items: center; justify-content: center; gap: 0.4rem; color: #7fe3c7; font-size: 0.72rem; margin-bottom: 1.1rem; text-align: center; }
+.pay-methods { display: flex; gap: 0.6rem; margin-bottom: 1.2rem; }
+.pay-method {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.45rem;
+    padding: 0.7rem 0.4rem; border-radius: 14px; border: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.05); color: #fff; font-size: 0.78rem; font-weight: 600; cursor: pointer;
+    transition: all 0.25s; font-family: var(--font-main); -webkit-tap-highlight-color: transparent;
+}
+.pay-method:hover { background: rgba(255,255,255,0.12); }
+.pay-method.active { border-color: #fbcfe8; background: rgba(251,207,232,0.16); color: #fbcfe8; }
+.pay-row { display: flex; gap: 0.8rem; }
+.pay-row .field { flex: 1; min-width: 0; }
+.pay-submit { display: flex; align-items: center; justify-content: center; gap: 0.6rem; }
+.pay-spinner {
+    width: 17px; height: 17px; border-radius: 50%; display: inline-block;
+    border: 2px solid rgba(1,17,23,0.25); border-top-color: #011d17;
+    animation: paySpin 0.7s linear infinite;
+}
+@keyframes paySpin { to { transform: rotate(360deg); } }
+.order-done-icon {
+    width: 64px; height: 64px; margin: 0.4rem auto 1rem; border-radius: 50%;
+    background: rgba(37,211,102,0.15); border: 1px solid #25D366;
+    display: flex; align-items: center; justify-content: center;
+}
+.order-done-icon svg { animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both; }
+@keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
+.order-summary { background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 16px; padding: 0.9rem 1rem; margin: 1rem 0 1.2rem; }
+.order-summary .info-row { background: transparent; border: none; padding: 0.55rem 0; border-bottom: 1px solid var(--glass-border); border-radius: 0; }
+.order-summary .info-row:last-child { border-bottom: none; }
+.pay-demo-note { font-size: 0.72rem; color: var(--muted-color); text-align: center; margin-top: 0.8rem; }
+@media (max-width: 640px) {
+    .pay-row { gap: 0.5rem; }
+    .pay-method { font-size: 0.7rem; padding: 0.6rem 0.3rem; }
+}
+
 .cart-line { display: flex; align-items: center; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid var(--glass-border); }
 .cart-line img { width: 54px; }
 .cart-line .cl-name { flex: 1; font-size: 0.9rem; font-weight: 600; }
@@ -887,6 +922,7 @@ const WA_LINK = 'https://wa.me/' + WA_NUMBER;
 const flavorOrder = ['classic', 'blue'];
 let currentFlavor = 'classic';
 let cartQty = 0;
+let lastOrder = null;
 
 const overlay = document.getElementById('overlay');
 const panelBody = document.getElementById('panel-body');
@@ -1011,7 +1047,71 @@ const PANELS = {
             </div>
         </div>
         <div class="cart-total"><span>Total</span><b id="cart-total">$${(f.price * qty).toFixed(2)}</b></div>
-        <button class="panel-btn" id="checkout-btn">Checkout</button>`;
+        <button class="panel-btn" id="checkout-btn">Proceed to Checkout</button>`;
+    },
+    payment: () => {
+        const f = FLAVORS[currentFlavor];
+        const qty = Math.max(cartQty, 1);
+        const amount = (f.price * qty).toFixed(2);
+        return `
+        <h3>Secure Checkout</h3>
+        <p class="panel-sub">Demo payment gateway — no real money is charged.</p>
+        <div class="pay-secure">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="10" width="16" height="11" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.6"/></svg>
+            128-bit encrypted · SSL secured
+        </div>
+        <div class="pay-methods">
+            <button type="button" class="pay-method active" data-pay="card">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M2 10h20M6 15h4" stroke="currentColor" stroke-width="1.5"/></svg>
+                Card
+            </button>
+            <button type="button" class="pay-method" data-pay="paypal">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M7 3h7.5c2.5 0 4.5 2 4.5 4.5S17 12 14.5 12H9.6l-.8 1H5l2-10zm3.4 7.6l.8-4.6H13c1.2 0 2.2 1 2.2 2.2s-1 2.2-2.2 2.2h-2.6zM20 8.6c-.2-2.7-2.4-4.7-5.1-4.7-.1 0-.3 0-.4 0" opacity=".7"/></svg>
+                PayPal
+            </button>
+            <button type="button" class="pay-method" data-pay="apple">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.86-3.08.38-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.38C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.53 4.05v.03zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+                Pay
+            </button>
+        </div>
+        <div class="pay-body" data-pay-body="card">
+            <form id="pay-form" novalidate>
+                <div class="field"><label for="pay-number">Card number</label><input id="pay-number" name="number" inputmode="numeric" autocomplete="cc-number" placeholder="1234 5678 9012 3456" maxlength="19"><span class="err">Enter a valid 16-digit card number</span></div>
+                <div class="pay-row">
+                    <div class="field"><label for="pay-exp">Expiry</label><input id="pay-exp" name="exp" inputmode="numeric" autocomplete="cc-exp" placeholder="MM / YY" maxlength="7"><span class="err">MM / YY</span></div>
+                    <div class="field"><label for="pay-cvv">CVV</label><input id="pay-cvv" name="cvv" type="password" inputmode="numeric" autocomplete="cc-csc" placeholder="123" maxlength="4"><span class="err">3–4 digits</span></div>
+                </div>
+                <div class="field"><label for="pay-name">Cardholder name</label><input id="pay-name" name="holder" autocomplete="cc-name" placeholder="Name on card"><span class="err">Enter the name on the card</span></div>
+                <button class="panel-btn pay-submit" id="pay-btn" type="submit">Pay <b id="pay-amount">$${amount}</b></button>
+            </form>
+            <p class="pay-demo-note">Demo only — your card details are never sent anywhere.</p>
+        </div>
+        <div class="pay-body" data-pay-body="paypal" style="display:none">
+            <div class="info-row" style="margin-bottom:1.2rem"><strong>Order total</strong><span style="color:#fbcfe8;font-weight:700">$${amount}</span></div>
+            <button class="panel-btn" id="paypal-btn" type="button">Continue with PayPal</button>
+            <p class="pay-demo-note">You'll be redirected to a demo PayPal page.</p>
+        </div>
+        <div class="pay-body" data-pay-body="apple" style="display:none">
+            <div class="info-row" style="margin-bottom:1.2rem"><strong>Order total</strong><span style="color:#fbcfe8;font-weight:700">$${amount}</span></div>
+            <button class="panel-btn" id="apple-btn" type="button">Pay with Apple Pay</button>
+            <p class="pay-demo-note">Tap to approve on your device.</p>
+        </div>`;
+    },
+    success: () => {
+        const o = lastOrder || { name: FLAVORS[currentFlavor].name, qty: Math.max(cartQty, 1), price: FLAVORS[currentFlavor].price, total: (FLAVORS[currentFlavor].price * Math.max(cartQty, 1)).toFixed(2), method: 'Card' };
+        return `
+        <div class="order-done-icon">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#25D366" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h3 style="text-align:center">Payment Successful</h3>
+        <p class="panel-sub" style="text-align:center">Demo gateway — no real money charged.</p>
+        <div class="order-summary">
+            <div class="info-row"><strong>${o.name}</strong><span>${o.qty} × $${o.price.toFixed(2)}</span></div>
+            <div class="info-row"><strong>Payment</strong><span>${o.method}</span></div>
+            <div class="info-row"><strong>Total</strong><span style="color:#fbcfe8;font-weight:700">$${o.total}</span></div>
+        </div>
+        <button class="panel-btn" id="finish-order">Confirm order on WhatsApp</button>
+        <button class="panel-btn" id="keep-shopping" style="background:transparent;border:1px solid var(--glass-border);color:#fff;margin-top:0.7rem;">Keep shopping</button>`;
     }
 };
 
@@ -1022,6 +1122,8 @@ function openPanel(key) {
     overlay.classList.add('open');
     if (key === 'contact') wireContactForm();
     if (key === 'cart') wireCart();
+    if (key === 'payment') wirePayment();
+    if (key === 'success') wireSuccess();
 }
 function closePanel() { overlay.classList.remove('open'); }
 
@@ -1049,25 +1151,116 @@ document.getElementById('shop-now').addEventListener('click', () => {
 });
 
 function wireCart() {
+const f = FLAVORS[currentFlavor];
+        const val = document.getElementById('qty-val');
+        const total = document.getElementById('cart-total');
+        const sync = () => {
+            val.textContent = cartQty;
+            total.textContent = '$' + (f.price * cartQty).toFixed(2);
+            updateBadge();
+        };
+        document.getElementById('qty-plus').addEventListener('click', () => { cartQty = Math.min(cartQty + 1, 99); sync(); });
+        document.getElementById('qty-minus').addEventListener('click', () => { cartQty = Math.max(cartQty - 1, 1); sync(); });
+        document.getElementById('checkout-btn').addEventListener('click', () => {
+            openPanel('payment');
+        });
+        sync();
+    }
+
+function finishPayment(btn, label) {
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<span class="pay-spinner"></span> Processing&hellip;';
+    btn.disabled = true;
+    toast('Processing payment…');
+    setTimeout(() => {
+        const f = FLAVORS[currentFlavor];
+        const qty = Math.max(cartQty, 1);
+        lastOrder = { name: f.name, qty, price: f.price, total: (f.price * qty).toFixed(2), method: label };
+        btn.innerHTML = orig;
+        btn.disabled = false;
+        openPanel('success');
+        toast('Payment approved — demo only!');
+    }, 2200);
+}
+
+function wirePayment() {
     const f = FLAVORS[currentFlavor];
-    const val = document.getElementById('qty-val');
-    const total = document.getElementById('cart-total');
-    const sync = () => {
-        val.textContent = cartQty;
-        total.textContent = '$' + (f.price * cartQty).toFixed(2);
-        updateBadge();
+    const amountEl = document.getElementById('pay-amount');
+    if (amountEl) amountEl.textContent = '$' + (f.price * Math.max(cartQty, 1)).toFixed(2);
+
+    let method = 'card';
+    const bodies = {
+        card: document.querySelector('[data-pay-body="card"]'),
+        paypal: document.querySelector('[data-pay-body="paypal"]'),
+        apple: document.querySelector('[data-pay-body="apple"]')
     };
-    document.getElementById('qty-plus').addEventListener('click', () => { cartQty = Math.min(cartQty + 1, 99); sync(); });
-    document.getElementById('qty-minus').addEventListener('click', () => { cartQty = Math.max(cartQty - 1, 1); sync(); });
-    document.getElementById('checkout-btn').addEventListener('click', () => {
-        const order = `Hi! I'd like to order ${cartQty} x ${f.name} ($${(f.price * cartQty).toFixed(2)}).`;
+    document.querySelectorAll('.pay-method').forEach(btn => {
+        btn.addEventListener('click', () => {
+            method = btn.dataset.pay;
+            document.querySelectorAll('.pay-method').forEach(x => x.classList.toggle('active', x === btn));
+            Object.entries(bodies).forEach(([k, el]) => { if (el) el.style.display = k === method ? '' : 'none'; });
+        });
+    });
+
+    const num = document.getElementById('pay-number');
+    const exp = document.getElementById('pay-exp');
+    const cvv = document.getElementById('pay-cvv');
+    num.addEventListener('input', () => {
+        num.value = num.value.replace(/\D/g, '').slice(0, 16).replace(/(.{4})/g, '$1 ').trim();
+        num.closest('.field').classList.remove('invalid');
+    });
+    exp.addEventListener('input', () => {
+        let v = exp.value.replace(/\D/g, '').slice(0, 4);
+        exp.value = v.length > 2 ? v.slice(0, 2) + ' / ' + v.slice(2) : v;
+        exp.closest('.field').classList.remove('invalid');
+    });
+    cvv.addEventListener('input', () => {
+        cvv.value = cvv.value.replace(/\D/g, '').slice(0, 4);
+        cvv.closest('.field').classList.remove('invalid');
+    });
+
+    const form = document.getElementById('pay-form');
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('pay-name');
+        const checks = [
+            [num, num.value.replace(/\D/g, '').length >= 16],
+            [exp, exp.value.length === 7],
+            [cvv, cvv.value.length >= 3],
+            [name, name.value.trim().length > 1]
+        ];
+        let ok = true;
+        checks.forEach(([el, valid]) => {
+            el.closest('.field').classList.toggle('invalid', !valid);
+            if (!valid) ok = false;
+        });
+        if (!ok) { toast('Please complete all card fields'); return; }
+        finishPayment(document.getElementById('pay-btn'), 'Card &bull;&bull;&bull;&bull; ' + num.value.replace(/\D/g, '').slice(-4));
+    });
+    document.getElementById('paypal-btn').addEventListener('click', () => {
+        finishPayment(document.getElementById('paypal-btn'), 'PayPal (demo)');
+    });
+    document.getElementById('apple-btn').addEventListener('click', () => {
+        finishPayment(document.getElementById('apple-btn'), 'Apple Pay (demo)');
+    });
+}
+
+function wireSuccess() {
+    const o = lastOrder;
+    document.getElementById('finish-order').addEventListener('click', () => {
+        const order = `Hi! I'd like to order ${o.qty} x ${o.name} ($${o.total}). Paid via ${o.method}.`;
         window.open(`${WA_LINK}?text=${encodeURIComponent(order)}`, '_blank', 'noopener');
-        toast(`Order sent on WhatsApp — ${cartQty} × ${f.name}!`);
+        toast(`Order sent on WhatsApp — ${o.qty} × ${o.name}!`);
         cartQty = 0;
         updateBadge();
         closePanel();
     });
-    sync();
+    document.getElementById('keep-shopping').addEventListener('click', () => {
+        cartQty = 0;
+        updateBadge();
+        closePanel();
+        toast('Thanks for visiting!');
+    });
 }
 
 function wireContactForm() {
